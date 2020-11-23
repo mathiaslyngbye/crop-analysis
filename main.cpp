@@ -111,15 +111,12 @@ int main(int argc, char* argv[])
         base_image = test_image.clone();
 
         // Create trackbar z
-        cv::createTrackbar( "Gripper cropping z", "Crop image", &z_slider, z_slider_max, on_trackbar );
-        cv::createTrackbar( "Crop tilt z", "Crop image", &tilt_slider, tilt_slider_max, on_trackbar );
+        cv::createTrackbar( "Crop z:\t", "Crop image", &z_slider, z_slider_max, on_trackbar );
+        cv::createTrackbar( "Crop tilt:\t", "Crop image", &tilt_slider, tilt_slider_max, on_trackbar );
         on_trackbar( z_slider, 0 );
 
-        // Create trackbar tilt
-
-
-        cv::waitKey(0); // Wait for a keystroke in the window
-        if(z_slider != 0)
+        char k = cv::waitKey(0); // Wait for a keystroke in the window
+        if(k != 8)
         {
             fout.open("data.csv",std::ios_base::app);
             fout << z_slider << ',' << tilt_slider << ',' << image_data[2] << '\n';
@@ -127,7 +124,7 @@ int main(int argc, char* argv[])
             std::cout << "z_slider: " << z_slider << "\ttilt_slider: " << tilt_slider << "\tz_robot: " << image_data[2] << std::endl;
         }
         else
-            std::cout << "Invalid gripper position..." << std::endl;
+            std::cout << "Skipping..." << std::endl;
     }
 
     cout << "End of main!" << endl;
