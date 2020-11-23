@@ -15,7 +15,7 @@ using namespace std;
 
 const double halfC = M_PI / 180;
 
-const int z_slider_max = 640;
+const int z_slider_max = 2*640;
 int z_slider = 0;
 const int tilt_slider_max = 360;
 int tilt_slider = 0;
@@ -31,6 +31,7 @@ static void on_trackbar( int, void* )
     cv::Point  middleBottom(z_slider+tilt_amount,dst.rows);
     dst = base_image.clone();
     cv::line(dst,middleTop,middleBottom,cv::Scalar(0,255,0));
+    cv::circle(dst, cv::Point(z_slider,dst.rows/2),2, cv::Scalar(0,0,255),CV_FILLED, 8,0);
     cv::imshow("Crop image", dst );
 }
 
@@ -118,12 +119,12 @@ int main(int argc, char* argv[])
 
 
         cv::waitKey(0); // Wait for a keystroke in the window
-        if(z_slider != 0 && z_slider != 640)
+        if(z_slider != 0)
         {
             fout.open("data.csv",std::ios_base::app);
             fout << z_slider << ',' << tilt_slider << ',' << image_data[2] << '\n';
             fout.close();
-            std::cout << "z_slider: " << z_slider << "tilt_slider:\t" << tilt_slider << "\tz_robot: " << image_data[2] << std::endl;
+            std::cout << "z_slider: " << z_slider << "\ttilt_slider: " << tilt_slider << "\tz_robot: " << image_data[2] << std::endl;
         }
         else
             std::cout << "Invalid gripper position..." << std::endl;
