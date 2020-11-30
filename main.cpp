@@ -15,12 +15,32 @@ using namespace std;
 
 const double halfC = M_PI / 180;
 
-const int z_slider_max = 2*640;
+const int z_slider_max = 1.5*640;
 int z_slider = 0;
 const int tilt_slider_max = 360;
 int tilt_slider = 0;
 cv::Mat base_image;
 cv::Mat dst;
+
+static void update(int z, int tilt)
+{
+    z_slider = z;
+    tilt_slider = tilt-180;
+
+    size_t height = dst.rows / 2;
+    int tilt_amount = height*std::tan(tilt_slider*halfC);
+
+    dst = base_image.clone();
+    cv::Point  middleTop(z-tilt_amount,0);
+    cv::Point  middleBottom(z+tilt_amount,dst.rows);
+
+    cv::line(dst,middleTop,middleBottom,cv::Scalar(0,255,0),2);
+    cv::circle(dst, cv::Point(z,dst.rows/2),3, cv::Scalar(0,0,255),CV_FILLED, 8,0);
+    std::string text = "z=" + to_string(z_slider) + ", tilt=" + to_string(tilt_slider);
+    cv::rectangle(dst, cv::Point2f(5,3), cv::Point2f(185,26), cv::Scalar(0,0,0), -1);
+    cv::putText(dst, text, cv::Point2f(10,20), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0,0,255),2);
+    cv::imshow("Crop image", dst );
+}
 
 static void on_trackbar( int, void* )
 {
@@ -33,6 +53,11 @@ static void on_trackbar( int, void* )
     cv::line(dst,middleTop,middleBottom,cv::Scalar(0,255,0));
     cv::circle(dst, cv::Point(z_slider,dst.rows/2),2, cv::Scalar(0,0,255),CV_FILLED, 8,0);
     cv::imshow("Crop image", dst );
+}
+
+static void on_mouse(int event,int x,int y,int,void*)
+{
+    update(x,y);
 }
 
 void fetch_test_image_paths(std::string path, std::vector<std::string> &test_image_paths)
@@ -109,19 +134,30 @@ int main(int argc, char* argv[])
         cv::cvtColor( tmp_image, test_image, cv::COLOR_GRAY2BGR );
 
         base_image = test_image.clone();
+        cv::Mat dst = base_image.clone();
+        std::string text = "z=" + to_string(z_slider) + ", tilt=" + to_string(tilt_slider);
+        cv::putText(dst, text, cv::Point2f(10,20), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255,0,0),2);
+        cv::imshow("Crop image", dst );
 
-        // Create trackbar z
-        cv::createTrackbar( "Crop z:\t", "Crop image", &z_slider, z_slider_max, on_trackbar );
-        cv::createTrackbar( "Crop tilt:\t", "Crop image", &tilt_slider, tilt_slider_max, on_trackbar );
-        on_trackbar( z_slider, 0 );
+        // Set initial guess
+        int data_z = image_data[2];
 
+        // Retired peasant trackbar
+        //cv::createTrackbar( "Crop z:\t", "Crop image", &z_slider, z_slider_max, on_trackbar );
+        //cv::createTrackbar( "Crop tilt:\t", "Crop image", &tilt_slider, tilt_slider_max, on_trackbar );
+        //on_trackbar( z_slider, 0 );
+
+        // Mouse master race
+        cv::setMouseCallback("Crop image",on_mouse);
+        update(z_slider, tilt_slider+180);
         char k = cv::waitKey(0); // Wait for a keystroke in the window
+
         if(k != 8)
         {
             fout.open("data.csv",std::ios_base::app);
-            fout << z_slider << ',' << tilt_slider << ',' << image_data[2] << '\n';
+            fout << z_slider << ',' << tilt_slider << ',' << data_z << '\n';
             fout.close();
-            std::cout << "z_slider: " << z_slider << "\ttilt_slider: " << tilt_slider << "\tz_robot: " << image_data[2] << std::endl;
+            std::cout << "z_slider: " << z_slider << "\ttilt_slider: " << tilt_slider << "\tz_robot: " << data_z << std::endl;
         }
         else
             std::cout << "Skipping..." << std::endl;
