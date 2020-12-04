@@ -141,6 +141,8 @@ int main(int argc, char* argv[])
 
         // Set initial guess
         int data_z = image_data[2];
+        int image_z = -13.873 + 0.68037*data_z;
+        int image_tilt = -0.75685  + 0.054274*data_z;
 
         // Retired peasant trackbar
         //cv::createTrackbar( "Crop z:\t", "Crop image", &z_slider, z_slider_max, on_trackbar );
@@ -149,9 +151,11 @@ int main(int argc, char* argv[])
 
         // Mouse master race
         cv::setMouseCallback("Crop image",on_mouse);
-        update(z_slider, tilt_slider+180);
+        update(image_z,image_tilt);
+        //update(z_slider, tilt_slider+180);
         char k = cv::waitKey(0); // Wait for a keystroke in the window
 
+        // Save image if enter is pressed
         if(k != 8)
         {
             fout.open("data.csv",std::ios_base::app);

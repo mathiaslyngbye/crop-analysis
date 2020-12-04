@@ -1,6 +1,9 @@
 clc; clear; close;
 
-data = readtable("data.csv");
+data = readtable("data-old-set.csv")
+%filter data
+%
+% 
 
 mdl_height = fitlm(data.robot_z, data.image_z);
 mdl_tilt = fitlm(data.robot_z, data.image_tilt);
@@ -18,3 +21,5 @@ plot(mdl_tilt);
 title('Tilt model')
 xlabel('robot z') 
 ylabel('image tilt') 
+
+mdl_height
