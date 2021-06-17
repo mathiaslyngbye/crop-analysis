@@ -36,8 +36,8 @@ static void update(int z, int tilt)
 
     cv::line(dst,middleTop,middleBottom,cv::Scalar(0,255,0),2);
     cv::circle(dst, cv::Point(z,dst.rows/2),3, cv::Scalar(0,0,255),CV_FILLED, 8,0);
-    std::string text = "z=" + to_string(z_slider) + ", tilt=" + to_string(tilt_slider);
-    cv::rectangle(dst, cv::Point2f(5,3), cv::Point2f(185,26), cv::Scalar(0,0,0), -1);
+    std::string text = "z=" + to_string(z_slider) + ", tilt=" + to_string(tilt_slider) + "deg";
+    cv::rectangle(dst, cv::Point2f(5,3), cv::Point2f(225,26), cv::Scalar(0,0,0), -1);
     cv::putText(dst, text, cv::Point2f(10,20), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0,0,255),2);
     cv::imshow("Crop image", dst );
 }
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     fout << "image_z,image_tilt,robot_z\n";
     fout.close();
 
-
+    int export_count = 0;
     for(size_t i = 0; i < test_image_paths.size(); i++)
     {
         std::string image_path = test_image_paths[i];
@@ -133,38 +133,47 @@ int main(int argc, char* argv[])
         cv::equalizeHist( tmp_image, tmp_image );
         cv::cvtColor( tmp_image, test_image, cv::COLOR_GRAY2BGR );
 
+
         base_image = test_image.clone();
-        cv::Mat dst = base_image.clone();
-        std::string text = "z=" + to_string(z_slider) + ", tilt=" + to_string(tilt_slider);
-        cv::putText(dst, text, cv::Point2f(10,20), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255,0,0),2);
-        cv::imshow("Crop image", dst );
+        dst = base_image.clone();
 
         // Set initial guess
         int data_z = image_data[2];
         int image_z = -13.873 + 0.68037*data_z;
         int image_tilt = -0.75685  + 0.054274*data_z;
-
+        std::cout << image_tilt << "\t" << data_z << std::endl;
         // Retired peasant trackbar
         //cv::createTrackbar( "Crop z:\t", "Crop image", &z_slider, z_slider_max, on_trackbar );
         //cv::createTrackbar( "Crop tilt:\t", "Crop image", &tilt_slider, tilt_slider_max, on_trackbar );
         //on_trackbar( z_slider, 0 );
 
         // Mouse master race
-        cv::setMouseCallback("Crop image",on_mouse);
         update(image_z,image_tilt);
+        cv::setMouseCallback("Crop image",on_mouse);
+        //update(image_z,image_tilt);
         //update(z_slider, tilt_slider+180);
         char k = cv::waitKey(0); // Wait for a keystroke in the window
 
         // Save image if enter is pressed
-        if(k != 8)
+        if(k == 10)
         {
             fout.open("data.csv",std::ios_base::app);
             fout << z_slider << ',' << tilt_slider << ',' << data_z << '\n';
             fout.close();
             std::cout << "z_slider: " << z_slider << "\ttilt_slider: " << tilt_slider << "\tz_robot: " << data_z << std::endl;
         }
-        else
+        else if (k == 8)
             std::cout << "Skipping..." << std::endl;
+        else if (k == 115)
+        {
+            cv::imwrite("./export_"+to_string(export_count++)+".png", dst);
+            std::cout << "Saving image!" << std::endl;
+        }
+        else
+        {
+            std::cout << "Showing the same picture again..." << std::endl;
+            i--;
+        }
     }
 
     cout << "End of main!" << endl;
